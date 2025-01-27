@@ -1,4 +1,4 @@
-# Python Autograder
+# Python Autograder - clone of original repo
 # 🛠️ 35_BA_Equinox Python Autograder
 
 Joint project between our team from **SMU and InHeyStack**.  Developed by **Deene, Shubhash, Euan, Andrew*, Bryan, Varrya**. This Autograder is designed automate the grading process of Python assignments done in modules and courses as the sheer volume of marking combined assignments is prone to human error
