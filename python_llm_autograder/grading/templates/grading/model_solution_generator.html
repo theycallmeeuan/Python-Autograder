@@ -1,0 +1,61 @@
+{% extends "grading/base.html" %}
+{%block content %}
+{% load crispy_forms_tags %}
+<h1>Model Solution Validation</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- <div class="form-group">
+            {{ form.course_group.label_tag }}
+            {{ form.course_group }}
+            {% for error in form.course_group.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.assignment.label_tag }}
+            {{ form.assignment }}
+            {% for error in form.assignment.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+
+        </div>
+        <div class="form-group">
+            {{ form.question.label_tag }}
+            {{ form.question }}
+            {% for error in form.question.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.student_submissions_zip.label_tag }}
+            {{ form.student_submissions_zip }}
+            {% for error in form.student_submissions_zip.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+        </div> -->
+        <!-- {{form.media}} -->
+        {{form|crispy}}
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+
+<script>
+    var editor = CodeMirror.fromTextArea(document.querySelector('.code-editor'), {
+        mode: 'python',
+        theme: 'monokai',
+        lineNumbers: true,
+        indentUnit: 4,
+        autoCloseBrackets: true
+    });
+</script>
+<style>
+    .CodeMirror {
+        height: 500px;
+        font-size: 14px;
+    }
+</style>
+{%endblock content%}

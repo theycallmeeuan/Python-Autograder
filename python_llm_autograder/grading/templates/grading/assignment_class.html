@@ -1,0 +1,68 @@
+{% extends "grading/base.html" %} {%block content %}
+{% load crispy_forms_tags %}
+<h1>Form Testing</h1>
+<form method="post">
+  {% csrf_token %}
+  <h2>Assign Assignment to Course Group</h2>
+
+  {{ course_group_form.non_field_errors }}
+  <div class="form-group">
+      {{ course_group_form.course_group.label_tag }}
+      {{ course_group_form.course_group }}
+      {% for error in course_group_form.course_group.errors %}
+          <div class="error">{{ error }}</div>
+      {% endfor %}
+  </div>
+
+  <div class="form-group">
+      {{ course_group_form.new_class_code.label_tag }}
+      {{ course_group_form.new_class_code }}
+      {% for error in course_group_form.new_class_code.errors %}
+          <div class="error">{{ error }}</div>
+      {% endfor %}
+  </div>
+
+  {{ assignment_form|crispy }}
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<div class="row mt-5">
+    <div class="col-md-2">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">Assignments</th>
+                </tr>
+            </thead>
+            <tbody id="assignment_list">
+                <tr>
+                    <td>---------</td>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function(){
+    // When course group changes
+    $('#id_course_group').change(function(){
+        var courseGroupId = $(this).val();
+        console.log(courseGroupId)
+        $.ajax({
+            url: "{% url 'ajax_load_assignments' %}",
+            data: {
+                'course_group': courseGroupId
+            },
+            success: function(data){
+                $("#assignment_list").html('');
+                $.each(data.assignments, function(key, value){
+                    console.log(key, value)
+                    $("#assignment_list").append('<tr><td>' + value.assignment_code + '</td></tr>');
+                });
+            }
+        });
+    });
+});
+</script>
+
+{%endblock content%}

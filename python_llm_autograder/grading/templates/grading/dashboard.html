@@ -1,0 +1,156 @@
+{% extends "grading/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Dashboard Page</h1>
+    <form method="GET" action="{% url 'grading-dashboard'%}">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-3">
+                {{ form.course_group|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                {{ form.assignment|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                {{ form.question|as_crispy_field }}
+            </div>
+            <div class="col-md-3" style="margin-top:30px;">
+                <button type="submit" class="btn btn-primary">Generate</button>
+            </div>
+        </div>
+        
+    </form>
+    <hr>
+
+    {% if charts %}
+        <!-- Include Plotly.js -->
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <div class="fw-bold">
+            <h3>Summary Statistics</h3>
+            <table class="table table-bordered table-dark">
+                <thead>
+                    <th>Mean Score</th>
+                    <th>Median Score</th>
+                    <th>Standard Deviation</th>
+                    <th>Overall Score</th>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ filter_params.mean_score|floatformat:2 }}</td>
+                        <td>{{ filter_params.median_score|floatformat:2 }}</td>
+                        <td>{{ filter_params.std_dev_score|floatformat:2 }}</td>
+                        <td>{{ filter_params.overall_score|floatformat:2 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Divs to hold the charts -->
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Total Marks Distribution</h3>
+                <div id="marks-distribution-chart"></div>
+            </div>
+            <div class="col-md-6">
+                <h3>Error Topic Distribution</h3>
+                <div id="error-topic-distribution-chart"></div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h3>Test Cases Passed Distribution</h3>
+                <div id="test-cases-distribution-chart"></div>
+            </div>
+            <div class="col-md-6">
+                <h3>Criteria Met Distribution</h3>
+                <div id="criteria-met-distribution-chart"></div>
+            </div>
+        </div>
+
+        <!-- Scripts to render the charts -->
+        <script type="text/javascript">
+            var marksDistribution = JSON.parse('{{ charts.marks_distribution|safe }}');
+            Plotly.newPlot('marks-distribution-chart', marksDistribution.data, marksDistribution.layout);
+
+            var errorTopicDistribution = JSON.parse('{{ charts.error_topic_distribution|safe }}');
+            Plotly.newPlot('error-topic-distribution-chart', errorTopicDistribution.data, errorTopicDistribution.layout);
+
+            var testCasesDistribution = JSON.parse('{{ charts.test_cases_distribution|safe }}');
+            Plotly.newPlot('test-cases-distribution-chart', testCasesDistribution.data, testCasesDistribution.layout);
+
+            var criteriaMetDistribution = JSON.parse('{{ charts.criteria_met_distribution|safe }}');
+            Plotly.newPlot('criteria-met-distribution-chart', criteriaMetDistribution.data, criteriaMetDistribution.layout);
+        </script>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <h3 class="alert-heading text-center">Please select a Course Group, Assignment, and Question<br> to generate the dashboard.</h2>
+        </div>
+    {% endif %}
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+$(document).ready(function(){
+    // When course group changes
+    $('#id_course_group').change(function(){
+        var courseGroupId = $(this).val();
+        console.log(courseGroupId)
+        $.ajax({
+            url: "{% url 'ajax_load_assignments' %}",
+            data: {
+                'course_group': courseGroupId
+            },
+            success: function(data){
+                console.log("Assignment Filter fires")
+                $("#id_assignment").html('<option value="">---------</option>');
+                $("#id_question").html('<option value="">---------</option>');
+                $.each(data.assignments, function(key, value){
+                    $("#id_assignment").append('<option value="' + value.assignment_code + '">' + value.assignment_code + '</option>');
+                });
+            }
+        });
+    });
+
+    // When assignment changes
+    $('#id_assignment').change(function(){
+        var assignmentId = $(this).val();
+        console.log(assignmentId)
+        $.ajax({
+            url: "{% url 'ajax_load_questions' %}",
+            data: {
+                'assignment': assignmentId
+            },
+            success: function(data){
+                console.log("Question Filter fires")
+                $("#id_question").html('<option value="">---------</option>');
+                $.each(data.questions, function(key, value){
+                    console.log(key, value)
+                    $("#id_question").append('<option value="' + value.id + '">' + value.qn_code + '</option>');
+                });
+            }
+        });
+    });
+
+    $('#id_question').change(function(){
+        var questionId = $(this).val();
+        console.log(questionId)
+        $.ajax({
+            url: "{% url 'ajax_load_course_groups' %}",
+            data: {
+                'question': questionId
+            },
+            success: function(data){
+                console.log("Course Group Filter fires")
+                //$("#id_question").html('<option value="">---------</option>');
+                $.each(data.course_groups, function(key, value){
+                    console.log(key, value)
+                    //$("#id_question").append('<option value="' + value.id + '">' + value.qn_code + '</option>');
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock content %}

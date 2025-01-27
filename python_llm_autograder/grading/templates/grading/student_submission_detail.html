@@ -1,0 +1,199 @@
+{% extends "grading/base.html" %}
+{%block content %}
+{% load crispy_forms_tags %}
+{% load custom_tags %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+
+<div class="container mt-5">
+    <h1 class="mb-4">Submission Details for Student ID: {{ submission.student_id }}</h1>
+    <div>
+        Class Group: {{submission.submission_batch.course_group.class_code}}, Assignment: {{submission.submission_batch.assignment.pk}} , Question: {{submission.submission_batch.question.qn_code}}<br>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Submission File Content</h5>
+        </div>
+        <div class="card-body">
+            <textarea id="submission-file-content" name="submission-file-content" class="form-control" rows="20">{{ submission.submission_file }}</textarea>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Test Case Feedback</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Test Case</th>
+                        <th>Result</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test_case, feedback in submission.test_cases_feedback.items %}
+                    <tr>
+                        <td>{{ test_case }}</td>
+                        <td>{{ feedback.result }}</td>
+                        
+                        <td style="max-width: 200px; overflow-x: auto;">
+                            {% if feedback.message %}
+                                {% with feedback_message=feedback.message|parse_json %}
+                                    {% if feedback_message %}
+                                        <ul class="list-unstyled">
+                                            <li>{{ feedback_message.msg }}</li>
+                                            <li  style="color:blue"><strong>Student Output:</strong> {{ feedback_message.student_output }}</li>
+                                            <li  style="color:rgb(7, 132, 41)"><strong>Model Output:</strong> {{ feedback_message.model_output }}</li>
+                                            <li  style="color:red"><strong>Student Error:</strong> {{ feedback_message.student_error }}</li>
+                                        </ul>
+                                    {% else %}
+                                        {{ feedback.message }}
+                                    {% endif %}
+                                {% endwith %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Question Specific Feedback</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Criteria</th>
+                        <th>Description</th>
+                        <th>Marks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feedback in submission.question_specific_feedback.Criteria %}
+                    <tr>
+                        <td>{{ feedback.Criteria }}</td>
+                        <td style="max-width: 400px; overflow-x: auto;">{{ feedback.Description }}</td>
+                        <td>{{ feedback.Marks }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="2"><strong>Total</strong></td>
+                        <td><strong>{{ submission.question_specific_feedback.Total }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Redundant Code Feedback</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Redundant Code Topic</th>
+                        <th>Summary</th>
+                        <th>Severity</th>
+                        <th>Marks Deducted</th>
+                        <th>Code Snippet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feedback in submission.checker_feedback.redundant_code %}
+                    <tr>
+                        <td>{{ feedback.redundant_code_topic }}</td>
+                        <td style="max-width: 400px; overflow-x: auto;">{{ feedback.summary }}</td>
+                        <td>{{ feedback.Severity }}</td>
+                        <td>{{ feedback.Marks }}</td>
+                        <td>
+                            <ul>
+                                {% for code in feedback.redundant_code_line_number %}
+                                <li>Line {{ code.line_number }}: {{ code.code }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="3"><strong>Total Marks Deducted</strong></td>
+                        <td colspan="2" style="color:red;"><strong>-{{ submission.checker_feedback.total_marks_deducted }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Best Practices Feedback</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Line</th>
+                        <th>Message</th>
+                        <th>Severity</th>
+                        <th>Marks Deducted</th>
+                        <th>Rubric Code</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feedback in submission.best_practices_feedback.best_practice_result %}
+                    <tr>
+                        <td>{{ feedback.line }}</td>
+                        <td style="max-width: 400px; overflow-x: auto;">{{ feedback.message }}</td>
+                        <td>{{ feedback.severity }}</td>
+                        <td>{{ feedback.marks }}</td>
+                        <td>{{ feedback.rubric_code }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="3"><strong>Total Marks Deducted</strong></td>
+                        <td colspan="2" style="color:red;"><strong>-{{ submission.best_practices_feedback.total_marks_deducted }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    var editor = CodeMirror.fromTextArea(document.getElementById("submission-file-content"), {
+        mode: 'python',
+        theme: 'monokai',
+        readOnly: true,
+        lineNumbers: true,
+        indentUnit: 4,
+        autoCloseBrackets: true
+    });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{%endblock content%}

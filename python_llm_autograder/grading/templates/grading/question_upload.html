@@ -1,0 +1,44 @@
+{% extends "grading/base.html" %}
+{%block content %}
+{% load crispy_forms_tags %}
+<h1>Form Testing Question</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <h2>Question Details</h2>
+        <div id="question_list" style="color: green;"></div>
+        {{ question_form|crispy }}
+
+        {{course_group_form|crispy}}
+    
+        <h2>Model Solution</h2>
+        {{ model_solution_form|crispy}}
+    
+        <button type="submit" class="btn btn-outline-dark">Submit</button>
+    </form>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+$(document).ready(function(){
+
+    // When assignment changes
+    $('#id_assignment').change(function(){
+        var assignmentId = $(this).val();
+        console.log(assignmentId)
+        $.ajax({
+            url: "{% url 'ajax_load_questions' %}",
+            data: {
+                'assignment': assignmentId
+            },
+            success: function(data){
+                $("#question_list").html(`Questions for ${assignmentId}: `);
+                $.each(data.questions, function(key, value){
+                    console.log(key, value)
+                    $("#question_list").append(value.qn_code +", ",);
+                });
+            }
+        });
+    });
+});
+</script>
+
+{%endblock content%}

@@ -1,0 +1,58 @@
+{% extends "grading/base.html" %}
+{% block content %}
+{% load tz %}
+<style>
+    .sticky-header th {
+        position: sticky;
+        top: 0;
+        background-color: #343a40;
+        color: white;
+        z-index: 2; /* Ensure it stays above table body */
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h1>Batch History</h1>
+        <a href="{% url 'question_list' %}">
+            <h1>Question History</h1>
+        </a>
+    </div>
+    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark sticky-header">
+                <tr>
+                    <th>ID</th>
+                    <th>Course Group</th>
+                    <th>Assignment</th>
+                    <th>Question</th>
+                    <th>Uploaded At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for batch in submission_batches %}
+                <tr>
+                    <td>
+                      <a href="{% url 'student_submissions_list' batch.pk %}" target="_blank">
+                        {{ batch.submission_id }}</td>
+                      </a>
+                    </td>
+                    <td>{{ batch.course_group.class_code }}</td>
+                    <td>{{ batch.assignment.assignment_code }}</td>
+                    <td>{{ batch.question.qn_code }}</td>
+                    <td>{{ batch.uploaded_at|timezone:"Asia/Singapore" }}</td>
+                    <td>
+                        <form method="post" action="{% url 'delete_submission_batch' batch.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

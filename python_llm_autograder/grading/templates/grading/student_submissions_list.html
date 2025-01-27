@@ -1,0 +1,201 @@
+{% extends "grading/base.html" %}
+{%block content %}
+{% load crispy_forms_tags %}
+{% load custom_tags %}
+<style>
+    .sticky-header th {
+        position: sticky;
+        top: 0;
+        background-color: #343a40;
+        color: white;
+        z-index: 2; /* Ensure it stays above table body */
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+    }
+</style>
+
+<div class="container-fluid mt-5">
+    <h1>Submission Batches</h1>
+    <div class="table-responsive" style="max-height: calc(100vh - 200px); overflow-y: auto;"></div>
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark sticky-header">
+                <tr>
+                    <th>Student ID</th>
+                    <th>Submission Batch</th>
+                    <th>Final Suggested Score</th>
+                    <th>Actual Score</th>
+                    <th>Needs Manual Review</th>
+                    <th>Test Cases Passed</th>
+                    <th>Test Cases Feedback</th>
+                    <th>Rubric Specific Score</th>
+                    <th>Rubric Specific Feedback</th>
+                    <th>Best Practices Deducted</th>
+                    <th>Best Practices - Stylistic</th>
+                    <th>Best Practice - Optimisation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                <tr>
+                    <td><a href="{% url 'student_submission_detail' submission.pk %}">{{ submission.student_id }}</a></td>
+                    <td>{{ submission.submission_batch.submission_id }}</td>
+                    <!-- <td>{{ submission.submission_file }}</td> -->
+                    <td>{{ submission.final_suggested_score }}/{{ submission.overall_score}}</td>
+                    <td>
+                        {{ submission.actual_score }}/{{ submission.overall_score}}
+                        <div class="form-group">
+                            <form method="post" action="{% url 'update_actual_score' submission.student_id %}">
+                                {% csrf_token %}
+                                {{ form.actual_score.errors }}
+                                {{ form.actual_score }}
+                                <button type="submit" class="btn btn-primary btn-sm">update</button>
+                            </form>
+                            {% if updated_submission_pk == submission.pk|stringformat:"s" %}
+                                <h5 id="update-message-{{ submission.pk }}" class="text-success mt-1">Value updated.</h5>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>{{ submission.needs_manual_review }}</td>
+                    <td>{{ submission.test_cases_passed }}/{{ submission.total_test_cases }}</td>
+                    <td>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Test Case</th>
+                                    <th>Result</th>
+                                    <th>Message</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test_case, feedback in submission.test_cases_feedback.items %}
+                                <tr>
+                                    <td>{{ test_case }}</td>
+                                    <td>{{ feedback.result }}</td>
+                                    
+                                    <td style="max-width: 200px; overflow-x: auto;">
+                                        {% if feedback.message %}
+                                            {% with feedback_message=feedback.message|parse_json %}
+                                                {% if feedback_message %}
+                                                    <ul class="list-unstyled">
+                                                        <li>{{ feedback_message.msg }}</li>
+                                                        <li  style="color:blue"><strong>Student Output:</strong> {{ feedback_message.student_output }}</li>
+                                                        <li  style="color:rgb(7, 132, 41)"><strong>Model Output:</strong> {{ feedback_message.model_output }}</li>
+                                                        <li  style="color:red"><strong>Student Error:</strong> {{ feedback_message.student_error }}</li>
+                                                    </ul>
+                                                {% else %}
+                                                    {{ feedback.message }}
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </td>
+                    <td>{{ submission.question_specific_score }}/{{ submission.question_specific_total_score }}</td>
+                    <td>
+                        <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Criteria</th>
+                                <th>Description</th>
+                                <th>Marks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for feedback in submission.question_specific_feedback.Criteria %}
+                            <tr>
+                                <td>{{ feedback.Criteria }}</td>
+                                <td style="max-width: 400px; overflow-x: auto;">{{ feedback.Description }}</td>
+                                <td>{{ feedback.Marks }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr>
+                                <td colspan="2"><strong>Total</strong></td>
+                                <td><strong>{{ submission.question_specific_feedback.Total }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table></td>
+                    <td style="color:red;"><strong>-{{ submission.best_practices_score }}</strong></td>
+                    <td>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Line</th>
+                                    <th>Message</th>
+                                    <th>Severity</th>
+                                    <th>Marks Deducted</th>
+                                    <th>Rubric Code</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feedback in submission.best_practices_feedback.best_practice_result %}
+                                <tr>
+                                    <td>{{ feedback.line }}</td>
+                                    <td style="max-width: 400px; overflow-x: auto;">{{ feedback.message }}</td>
+                                    <td>{{ feedback.severity }}</td>
+                                    <td>{{ feedback.marks }}</td>
+                                    <td>{{ feedback.rubric_code }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr>
+                                    <td colspan="3"><strong>Total Marks Deducted</strong></td>
+                                    <td colspan="2" style="color:red;"><strong>-{{ submission.best_practices_feedback.total_marks_deducted }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                    </td>
+                    <td>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Redundant Code Topic</th>
+                                    <th>Summary</th>
+                                    <th>Severity</th>
+                                    <th>Marks Deducted</th>
+                                    <th>Code Snippet</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feedback in submission.checker_feedback.redundant_code %}
+                                <tr>
+                                    <td>{{ feedback.redundant_code_topic }}</td>
+                                    <td style="max-width: 400px; overflow-x: auto;">{{ feedback.summary }}</td>
+                                    <td>{{ feedback.Severity }}</td>
+                                    <td>{{ feedback.Marks }}</td>
+                                    <td>
+                                        <ul>
+                                            {% for code in feedback.redundant_code_line_number %}
+                                            <li>Line {{ code.line_number }}: {{ code.code }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                <tr>
+                                    <td colspan="3"><strong>Total Marks Deducted</strong></td>
+                                    <td colspan="2" style="color:red;"><strong>-{{ submission.checker_feedback.total_marks_deducted }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+</div>
+{% if updated_submission_pk %}
+<script>
+    setTimeout(function() {
+        var messageElement = document.getElementById('update-message-{{ updated_submission_pk }}');
+        if (messageElement) {
+            messageElement.style.display = 'none';
+        }
+    }, 5000); // Hide message after 5 seconds
+
+    
+</script>
+{% endif %}
+{% endblock content %}

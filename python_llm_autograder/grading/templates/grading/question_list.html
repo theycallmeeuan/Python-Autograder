@@ -1,0 +1,52 @@
+<!-- In templates/grading/question_list.html -->
+{% extends "grading/base.html" %}
+{% block content %}
+{% load tz %}
+<style>
+    .sticky-header th {
+        position: sticky;
+        top: 0;
+        background-color: #343a40;
+        color: white;
+        z-index: 2; /* Ensure it stays above table body */
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+    }
+</style>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <a href="{% url 'grading-history' %}">
+            <h1>Batch History</h1>
+        </a>
+        <h1>Question History</h1>
+    </div>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark sticky-header">
+            <tr>
+                <th>ID</th>
+                <th>Question Code</th>
+                <th>Assignment</th>
+                <th>Lecturer</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for question in questions %}
+            <tr>
+                <td>{{ question.id }}</td>
+                <td>{{ question.qn_code }}</td>
+                <td>{{ question.assignment.assignment_code }}</td>
+                <td>{{ question.lecturer.username }}</td>
+                <td>{{ question.created_at|timezone:"Asia/Singapore" }}</td>
+                <td>
+                    <form method="post" action="{% url 'delete_question' question.pk %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "grading/base.html" %}
+{%block content %}
+{% load crispy_forms_tags %}
+<h1>Student Submission Upload</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- <div class="form-group">
+            {{ form.course_group.label_tag }}
+            {{ form.course_group }}
+            {% for error in form.course_group.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.assignment.label_tag }}
+            {{ form.assignment }}
+            {% for error in form.assignment.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+
+        </div>
+        <div class="form-group">
+            {{ form.question.label_tag }}
+            {{ form.question }}
+            {% for error in form.question.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.student_submissions_zip.label_tag }}
+            {{ form.student_submissions_zip }}
+            {% for error in form.student_submissions_zip.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+        </div> -->
+        {{form|crispy}}
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+    $(document).ready(function(){
+    // When course group changes
+    $('#id_course_group').change(function(){
+        var courseGroupId = $(this).val();
+        console.log(courseGroupId)
+        $.ajax({
+            url: "{% url 'ajax_load_assignments' %}",
+            data: {
+                'course_group': courseGroupId
+            },
+            success: function(data){
+                $("#id_assignment").html('<option value="">---------</option>');
+                $("#id_question").html('<option value="">---------</option>');
+                $.each(data.assignments, function(key, value){
+                    $("#id_assignment").append('<option value="' + value.assignment_code + '">' + value.assignment_code + '</option>');
+                });
+                console.log($("#id_assignment").html())
+            }
+        });
+    });
+
+    // When assignment changes
+    $('#id_assignment').change(function(){
+        var assignmentId = $(this).val();
+        console.log(assignmentId)
+        $.ajax({
+            url: "{% url 'ajax_load_questions' %}",
+            data: {
+                'assignment': assignmentId
+            },
+            success: function(data){
+                $("#id_question").html('<option value="">---------</option>');
+                $.each(data.questions, function(key, value){
+                    $("#id_question").append('<option value="' + value.id + '">' + value.qn_code + '</option>');
+                });
+                console.log($("#id_question").html())
+            }
+        });
+    });
+    });
+    </script>
+{%endblock content%}

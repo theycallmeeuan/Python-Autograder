@@ -1,0 +1,32 @@
+{% extends "grading/base.html" %} 
+{% block content %}
+
+    {% if user.is_authenticated %}
+    <div class="container bg-light bg-gradient p-3">
+        <h3> Hi {{ user.username }}! </h3>
+        <p>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-dark">Logout</button> | 
+                <a href="{% url 'question-upload' %}" class="btn btn-outline-dark">Upload Documents</a>
+            </form>
+        </p>
+    </div>
+        {% comment %} {% for post in posts%}
+            <h1>{{post.title}}</h1>
+            <p>By {{post.author}} on {{post.date}}</p>
+            <p>{{post.content}}</p>
+        {% endfor%}  {% endcomment %}
+    {% else %}
+        <div class="container rounded bg-dark p-3 mt-4">
+            <h2 class="text-light text-center mb-4">You are not logged in</h2>
+            <div class="d-flex justify-content-center">
+                <a href="{% url 'login' %}" class="btn btn-primary mx-2">Log In</a> |
+                <a href="{% url 'signup' %}" class="btn btn-primary mx-2">Sign Up</a>
+            </div>
+        </div>
+        {% comment %} <p>You are not logged in</p>
+        <a href="{% url 'login' %}">Log In</a> |
+        <a href="{% url 'signup' %}">Sign Up</a> {% endcomment %}
+    {% endif %}
+{% endblock content %}
